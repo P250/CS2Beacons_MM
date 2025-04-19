@@ -1,0 +1,6 @@
+services:
+  cs2test-build:
+    image: ambuilder
+    build: .
+    volumes:
+      - '.:/app/source'

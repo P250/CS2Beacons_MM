@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include "sample_mm.h"
 #include "iserver.h"
+#include "network_connection.pb.h"
 
 SH_DECL_HOOK3_void(IServerGameDLL, GameFrame, SH_NOATTRIB, 0, bool, bool, bool);
 SH_DECL_HOOK4_void(IServerGameClients, ClientActive, SH_NOATTRIB, 0, CPlayerSlot, bool, const char *, uint64);
@@ -84,18 +85,6 @@ bool SamplePlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, 
 	g_pCVar = icvar;
 	META_CONVAR_REGISTER( FCVAR_RELEASE | FCVAR_CLIENT_CAN_EXECUTE | FCVAR_GAMEDLL );
 
-	// You can get a convar reference to an already existing cvar via CConVarRef.
-	// This will pre-register it if it's not yet registered and would use default data until
-	// the actual cvar is registered. You can assert data existance via IsConVarDataAvailable().
-	// Make sure the type is correct here otherwise it might prevent actual convar being registered,
-	// since you pre-registered it with a different type or if convar already exists you'd be left with 
-	// an invalid ref, so a check for IsValidRef() is also nice to have.
-	// Generally with these you should just know the type of a cvar you are referencing beforehand
-	// and if not, refer to ConVarRefAbstract usage
-	// 
-	// Side Note: Always make sure you are working with a valid ref (IsValidRef()) before reading/writing to it
-	// as otherwise you'd be reading/writing off of default convar data which is shared across
-	// all the invalid convar refs.
 	return true;
 }
 

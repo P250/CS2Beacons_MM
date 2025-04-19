@@ -310,6 +310,7 @@ MMSPlugin.detectSDKs()
 MMSPlugin.configure()
 
 BuildScripts = [
+  'VSCodePropGen',
   'AMBuilder',
   'PackageScript',
 ]

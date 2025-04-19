@@ -1,0 +1,49 @@
+import os, json, re
+
+for sdk_target in MMSPlugin.sdk_targets:
+  sdk = sdk_target.sdk
+  cxx = sdk_target.cxx
+
+binary = MMSPlugin.HL2Library(builder, cxx, MMSPlugin.plugin_name, sdk)
+
+vscode_props = None
+if builder.options.gen_vscode_props:
+	vscode_props = { 'env': { 'mmsRoot': MMSPlugin.mms_root, 'sdkRoot': builder.options.hl2sdk_root }, 'configurations': [], 'version': '4'}
+	
+	def filter_workdirs(path):
+		for key, dir in vscode_props['env'].items():
+			if dir is not None and path.startswith(dir):
+				return path.replace(dir, '${' + key + '}')
+		return path
+	
+	if vscode_props is not None:
+		cpp_standard = '${default}'
+		c_standard = '${default}'
+		for flag in filter(lambda x: '/std:' in x or '-std=' in x, binary.compiler.cxxflags):
+			if 'c++' in flag:
+				cpp_standard = flag[5:]
+			elif 'c' in flag:
+				c_standard = flag[5:]
+				
+		print(cxx.target.platform)
+		print(binary.compiler.vendor)
+	
+		vscode_props['configurations'].append({
+			'name': cxx.target.platform.upper() + '-' + sdk['name'],
+			'includePath': list(map(filter_workdirs, binary.compiler.cxxincludes)),
+			'defines': binary.compiler.defines,
+			'compilerArgs': binary.compiler.cxxflags,
+			#'compilerPath': '/usr/bin/' + binary.compiler.vendor if cxx.target.platform == 'linux' else '',
+			'cppStandard': cpp_standard,
+			'cStandard': c_standard,
+			'intelliSenseMode': (cxx.target.platform if cxx.target.platform != 'mac' else 'macos') + '-' + str(binary.compiler.vendor) + '-x86'
+		})
+
+if vscode_props is not None:
+	vscode_path = os.path.join(builder.currentSourcePath, '.vscode')
+	if not os.path.exists(vscode_path):
+		os.mkdirs(vscode_path)
+
+	with open(os.path.join(vscode_path, 'c_cpp_properties.json'), 'w') as file:
+		print('Generating .vscode/c_cpp_properties.json...')
+		file.write(json.dumps(vscode_props, indent=4))

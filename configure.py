@@ -38,4 +38,7 @@ parser.options.add_argument('-s', '--sdks', default='all', dest='sdks',
                             'comma-delimited list of engine names (default: "all")')
 parser.options.add_argument('--targets', type=str, dest='targets', default=None,
                             help="Override the target architecture (use commas to separate multiple targets).")
+parser.options.add_argument('--vscode', '--generate-vscode-properties', action='store_const', const='1', dest='gen_vscode_props', default=None,
+                       help='Generates VSCode ./vscode/c_cpp_properties.json file inside the project directory'
+                            'that includes all project specific defines, include folders etc.')
 parser.Configure()

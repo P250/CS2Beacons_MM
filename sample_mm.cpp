@@ -37,7 +37,7 @@ ICvar *icvar = NULL;
 
 // Should only be called within the active game loop (i e map should be loaded and active)
 // otherwise that'll be nullptr!
-CGlobalVars *GetGameGlobals()
+/*CGlobalVars *GetGameGlobals()
 {
 	INetworkGameServer *server = g_pNetworkServerService->GetIGameServer();
 
@@ -45,7 +45,7 @@ CGlobalVars *GetGameGlobals()
 		return nullptr;
 
 	return g_pNetworkServerService->GetIGameServer()->GetGlobals();
-}
+}*/
 
 CON_COMMAND_F(sample_command, "Sample command", FCVAR_NONE)
 {
@@ -57,28 +57,16 @@ bool SamplePlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, 
 {
 	PLUGIN_SAVEVARS();
 
-	GET_V_IFACE_CURRENT(GetEngineFactory, engine, IVEngineServer, INTERFACEVERSION_VENGINESERVER);
+	//GET_V_IFACE_CURRENT(GetEngineFactory, engine, IVEngineServer, INTERFACEVERSION_VENGINESERVER);
 	GET_V_IFACE_CURRENT(GetEngineFactory, icvar, ICvar, CVAR_INTERFACE_VERSION);
-	GET_V_IFACE_ANY(GetServerFactory, server, IServerGameDLL, INTERFACEVERSION_SERVERGAMEDLL);
-	GET_V_IFACE_ANY(GetServerFactory, gameclients, IServerGameClients, INTERFACEVERSION_SERVERGAMECLIENTS);
-	GET_V_IFACE_ANY(GetEngineFactory, g_pNetworkServerService, INetworkServerService, NETWORKSERVERSERVICE_INTERFACE_VERSION);
-
-	// Currently doesn't work from within mm side, use GetGameGlobals() in the mean time instead
-	// gpGlobals = ismm->GetCGlobals();
+	//GET_V_IFACE_ANY(GetServerFactory, server, IServerGameDLL, INTERFACEVERSION_SERVERGAMEDLL);
+	//GET_V_IFACE_ANY(GetServerFactory, gameclients, IServerGameClients, INTERFACEVERSION_SERVERGAMECLIENTS);
+	//GET_V_IFACE_ANY(GetEngineFactory, g_pNetworkServerService, INetworkServerService, NETWORKSERVERSERVICE_INTERFACE_VERSION);
 
 	// Required to get the IMetamodListener events
 	g_SMAPI->AddListener( this, this );
 
 	META_CONPRINTF( "Starting plugin.\n" );
-
-	SH_ADD_HOOK(IServerGameDLL, GameFrame, server, SH_MEMBER(this, &SamplePlugin::Hook_GameFrame), true);
-	SH_ADD_HOOK(IServerGameClients, ClientActive, gameclients, SH_MEMBER(this, &SamplePlugin::Hook_ClientActive), true);
-	SH_ADD_HOOK(IServerGameClients, ClientDisconnect, gameclients, SH_MEMBER(this, &SamplePlugin::Hook_ClientDisconnect), true);
-	SH_ADD_HOOK(IServerGameClients, ClientPutInServer, gameclients, SH_MEMBER(this, &SamplePlugin::Hook_ClientPutInServer), true);
-	SH_ADD_HOOK(IServerGameClients, ClientSettingsChanged, gameclients, SH_MEMBER(this, &SamplePlugin::Hook_ClientSettingsChanged), false);
-	SH_ADD_HOOK(IServerGameClients, OnClientConnected, gameclients, SH_MEMBER(this, &SamplePlugin::Hook_OnClientConnected), false);
-	SH_ADD_HOOK(IServerGameClients, ClientConnect, gameclients, SH_MEMBER(this, &SamplePlugin::Hook_ClientConnect), false);
-	SH_ADD_HOOK(IServerGameClients, ClientCommand, gameclients, SH_MEMBER(this, &SamplePlugin::Hook_ClientCommand), false);
 
 	META_CONPRINTF( "All hooks started!\n" );
 
@@ -90,15 +78,6 @@ bool SamplePlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, 
 
 bool SamplePlugin::Unload(char *error, size_t maxlen)
 {
-	SH_REMOVE_HOOK(IServerGameDLL, GameFrame, server, SH_MEMBER(this, &SamplePlugin::Hook_GameFrame), true);
-	SH_REMOVE_HOOK(IServerGameClients, ClientActive, gameclients, SH_MEMBER(this, &SamplePlugin::Hook_ClientActive), true);
-	SH_REMOVE_HOOK(IServerGameClients, ClientDisconnect, gameclients, SH_MEMBER(this, &SamplePlugin::Hook_ClientDisconnect), true);
-	SH_REMOVE_HOOK(IServerGameClients, ClientPutInServer, gameclients, SH_MEMBER(this, &SamplePlugin::Hook_ClientPutInServer), true);
-	SH_REMOVE_HOOK(IServerGameClients, ClientSettingsChanged, gameclients, SH_MEMBER(this, &SamplePlugin::Hook_ClientSettingsChanged), false);
-	SH_REMOVE_HOOK(IServerGameClients, OnClientConnected, gameclients, SH_MEMBER(this, &SamplePlugin::Hook_OnClientConnected), false);
-	SH_REMOVE_HOOK(IServerGameClients, ClientConnect, gameclients, SH_MEMBER(this, &SamplePlugin::Hook_ClientConnect), false);
-	SH_REMOVE_HOOK(IServerGameClients, ClientCommand, gameclients, SH_MEMBER(this, &SamplePlugin::Hook_ClientCommand), false);
-
 	return true;
 }
 
@@ -107,68 +86,6 @@ void SamplePlugin::AllPluginsLoaded()
 	/* This is where we'd do stuff that relies on the mod or other plugins 
 	 * being initialized (for example, cvars added and events registered).
 	 */
-}
-
-void SamplePlugin::Hook_ClientActive( CPlayerSlot slot, bool bLoadGame, const char *pszName, uint64 xuid )
-{
-	META_CONPRINTF( "Hook_ClientActive(%d, %d, \"%s\", %d)\n", slot, bLoadGame, pszName, xuid );
-}
-
-void SamplePlugin::Hook_ClientCommand( CPlayerSlot slot, const CCommand &args )
-{
-	META_CONPRINTF( "Hook_ClientCommand(%d, \"%s\")\n", slot, args.GetCommandString() );
-}
-
-void SamplePlugin::Hook_ClientSettingsChanged( CPlayerSlot slot )
-{
-	META_CONPRINTF( "Hook_ClientSettingsChanged(%d)\n", slot );
-}
-
-void SamplePlugin::Hook_OnClientConnected( CPlayerSlot slot, const char *pszName, uint64 xuid, const char *pszNetworkID, const char *pszAddress, bool bFakePlayer )
-{
-	META_CONPRINTF( "Hook_OnClientConnected(%d, \"%s\", %d, \"%s\", \"%s\", %d)\n", slot, pszName, xuid, pszNetworkID, pszAddress, bFakePlayer );
-}
-
-bool SamplePlugin::Hook_ClientConnect( CPlayerSlot slot, const char *pszName, uint64 xuid, const char *pszNetworkID, bool unk1, CBufferString *pRejectReason )
-{
-	META_CONPRINTF( "Hook_ClientConnect(%d, \"%s\", %d, \"%s\", %d, \"%s\")\n", slot, pszName, xuid, pszNetworkID, unk1, pRejectReason->Get() );
-
-	RETURN_META_VALUE(MRES_IGNORED, true);
-}
-
-void SamplePlugin::Hook_ClientPutInServer( CPlayerSlot slot, char const *pszName, int type, uint64 xuid )
-{
-	META_CONPRINTF( "Hook_ClientPutInServer(%d, \"%s\", %d, %d)\n", slot, pszName, type, xuid );
-}
-
-void SamplePlugin::Hook_ClientDisconnect( CPlayerSlot slot, ENetworkDisconnectionReason reason, const char *pszName, uint64 xuid, const char *pszNetworkID )
-{
-	META_CONPRINTF( "Hook_ClientDisconnect(%d, %d, \"%s\", %d, \"%s\")\n", slot, reason, pszName, xuid, pszNetworkID );
-}
-
-void SamplePlugin::Hook_GameFrame( bool simulating, bool bFirstTick, bool bLastTick )
-{
-	/**
-	 * simulating:
-	 * ***********
-	 * true  | game is ticking
-	 * false | game is not ticking
-	 */
-}
-
-void SamplePlugin::OnLevelInit( char const *pMapName,
-									 char const *pMapEntities,
-									 char const *pOldLevel,
-									 char const *pLandmarkName,
-									 bool loadGame,
-									 bool background )
-{
-	META_CONPRINTF("OnLevelInit(%s)\n", pMapName);
-}
-
-void SamplePlugin::OnLevelShutdown()
-{
-	META_CONPRINTF("OnLevelShutdown()\n");
 }
 
 bool SamplePlugin::Pause(char *error, size_t maxlen)
